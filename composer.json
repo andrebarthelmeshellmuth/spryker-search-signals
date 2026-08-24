@@ -21,6 +21,7 @@
         "spryker/queue": "^1.29.0",
         "spryker/queue-extension": "^1.2.0",
         "spryker/router": "^1.26.0",
+        "spryker/sales-extension": "^1.15.0",
         "spryker/search-elasticsearch": "^1.10.0",
         "spryker/storage": "^3.25.0",
         "spryker/store": "^1.19.0",
