@@ -1,0 +1,50 @@
+{% extends '@Gui/Layout/layout.twig' %}
+
+{% set widget_title = 'Search Signals' %}
+{% block section_title %}{{ widget_title | trans }}{% endblock %}
+
+{% block content %}
+    {% embed '@Gui/Partials/widget.twig' with { widget_title: 'Metric coverage' } %}
+        {% block widget_content %}
+            <p>
+                What this package has actually captured so far, per store and locale — all-time totals,
+                not a trend. Zero rows everywhere for a store/locale means either nothing has happened
+                yet or a wiring step is missing; run <code>console search-signals:check-installation</code>
+                to tell those apart.
+            </p>
+
+            {% if coverage is empty %}
+                <p>{{ 'No stores configured, or nothing captured yet.' | trans }}</p>
+            {% else %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>{{ 'Store' | trans }}</th>
+                            <th>{{ 'Locale' | trans }}</th>
+                            <th>{{ 'Products with any signal' | trans }}</th>
+                            <th>{{ 'Impressions' | trans }}</th>
+                            <th>{{ 'Clicks' | trans }}</th>
+                            <th>{{ 'CTR' | trans }}</th>
+                            <th>{{ 'Cart adds' | trans }}</th>
+                            <th>{{ 'Orders' | trans }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in coverage %}
+                            <tr>
+                                <td>{{ row.storeName }}</td>
+                                <td>{{ row.localeName }}</td>
+                                <td>{{ row.distinctProductCount }}</td>
+                                <td>{{ row.impressionCount }}</td>
+                                <td>{{ row.clickCount }}</td>
+                                <td>{{ row.impressionCount > 0 ? (100 * row.clickCount / row.impressionCount) | number_format(2) ~ '%' : '—' }}</td>
+                                <td>{{ row.cartAddCount }}</td>
+                                <td>{{ row.orderCount }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

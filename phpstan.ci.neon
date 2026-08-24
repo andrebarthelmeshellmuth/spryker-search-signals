@@ -1,0 +1,59 @@
+includes:
+    - phpstan.neon
+
+# CI-only variant of phpstan.neon, run via `composer phpstan-ci` (see tests/_ci-standalone for the same
+# standalone-portability pattern already used by the Portable Codeception suite). Two categories of class
+# genuinely don't exist outside a real host shop and are excluded rather than faked:
+#
+# - `Generated\{Zed,Yves,Client,Service}\Ide\AutoCompletion` — an aggregate stub across every module in a
+#   real project's full dependency graph, produced by `console dev:ide-auto-completion:generate`. Not
+#   reproducible for one package in isolation.
+# - `Orm\Zed\SearchSignals\Persistence\*` (Propel entity/query classes) — produced by
+#   `propel:model:build` against a real schema + database, same category of gap.
+#
+# Both are still exercised for real by this package's DB-backed Codeception suite when run from a host
+# shop (see README, "Testing and CI") — this file only relaxes what a single standalone package checkout
+# can verify about itself.
+#
+# Three further, narrower categories are ignored below, all discovered running `composer phpstan-ci` for
+# real for the first time (2026-08-24) rather than guessed:
+#
+# - `CartChangeTransfer::getItems()/getQuote()` and `SaveOrderTransfer::getOrderItems()` — these
+#   properties are added to the base (empty) transfer by OTHER Spryker modules' own transfer.xml
+#   (`spryker/product-cart-connector` for CartChange, similarly for SaveOrder's order-items relation),
+#   modules search-signals doesn't itself require (rightly — it shouldn't hard-depend on a specific
+#   cart/sales feature set just to type-check standalone). Every real Spryker shop with a working cart
+#   and checkout already has one of these installed, so the properties genuinely exist at runtime; only
+#   this standalone, minimal-dependency checkout can't regenerate them.
+# - `Generated\Shared\Search\PageIndexMap` — generated from a project's own `.search.xml` schema
+#   (`transfer:generate`'s search-document counterpart), same "only exists inside a real host shop"
+#   category as `Generated\*\Ide\AutoCompletion` above, just for search-document field maps instead of
+#   Locator stubs.
+# - `Spryker\Zed\Kernel\Locator::store()/stock()` — the two Channel 2 naive-default metric-transformer
+#   plugins call these dynamic accessors directly (see their own docblocks for why: they're consumed by,
+#   not constructed by, this module's Business layer, so they can't get a constructor-injected Bridge the
+#   normal way). Those accessor methods only exist via `@method` docblocks Spryker generates onto a
+#   PROJECT's own Locator subclass at `dev:ide-auto-completion:generate` time — same underlying gap as
+#   Ide\AutoCompletion, just reached through the base Locator class instead of through that generated stub
+#   directly.
+parameters:
+    bootstrapFiles!:
+        - phpstan-ci-bootstrap.php
+    excludePaths:
+        analyse:
+            - src/Generated/*
+    scanDirectories:
+        - src/Generated
+    ignoreErrors:
+        -
+            message: '#Generated\\(Zed|Yves|Client|Service)\\Ide\\AutoCompletion#'
+        -
+            message: '#Orm\\Zed\\#'
+        -
+            message: '#Call to an undefined method Generated\\Shared\\Transfer\\CartChangeTransfer::(getItems|getQuote)\(\)#'
+        -
+            message: '#Call to an undefined method Generated\\Shared\\Transfer\\SaveOrderTransfer::getOrderItems\(\)#'
+        -
+            message: '#Generated\\Shared\\Search\\PageIndexMap#'
+        -
+            message: '#Call to an undefined method Spryker\\Zed\\Kernel\\Locator::(store|stock)\(\)#'
