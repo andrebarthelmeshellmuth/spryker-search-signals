@@ -396,17 +396,22 @@ above; this page is for visibility, not control.
 
 ## Testing and CI
 
-- **Portable** (`@group Portable`, `composer test-portable`) — 59 tests, live-verified green: full unit
-  coverage of every pure/mockable Business and Yves class (`ClickTokenCodec`, `BayesianShrinkageCalculator`,
-  `ClickUrlBuilder`, `RollupBuilder`, `ProductMetricCsvWriter`, `QueueDrainer`,
-  `ImpressionEventWriter`/`ClickEventWriter`, `ProductCounterIncrementer`, `MetricCoverageReader`,
-  `LocalMetricCsvWriter`), the Facade's full delegation surface, and the three
-  `SearchSignalsCheckInstallationConsole` checks that don't need Zed DI (core namespace, plugin classes,
-  click-token secret). No Locator/DB/search engine. Runs standalone, including in CI with no host shop.
+- **Portable** (`@group Portable`, `composer test-portable`) — 71 tests, live-verified green: full unit
+  coverage of every pure/mockable Business, Client, and Yves class (`ClickTokenCodec`,
+  `BayesianShrinkageCalculator`, `ClickUrlBuilder`, `RollupBuilder`, `ProductMetricCsvWriter`,
+  `QueueDrainer`, `ImpressionEventWriter`/`ClickEventWriter`, `ProductCounterIncrementer`,
+  `MetricCoverageReader`, `LocalMetricCsvWriter`, the 3 event publishers, `ClickController`), the Facade's
+  full delegation surface, and the three `SearchSignalsCheckInstallationConsole` checks that don't need
+  Zed DI (core namespace, plugin classes, click-token secret). No Locator/DB/search engine. Runs
+  standalone, including in CI with no host shop.
 - **Not Portable-testable, verified by hand instead**: `SearchSignalsCheckInstallationConsole`'s other two
   checks (`checkStorageKv`/`checkSchema`, both need `getFactory()` against a real Zed container) and
   `CheckInstallationController` (Yves, needs `getTwig()`/`getRouter()`) — both live-verified via
   `console search-signals:check-installation` and a real browser session, not by an automated test.
+  `SearchSignalsCartItemExpanderPlugin`/`SearchSignalsOrderPostSavePlugin` are similarly untestable here:
+  the real `CartChangeTransfer`/`SaveOrderTransfer` properties they use come from modules this package
+  doesn't require (see phpstan.ci.neon's own ignore list for the same gap), so the standalone-generated
+  transfers are empty shells with no `getItems()`/`getQuote()` to construct a fixture from.
 - **Zed suite** (`tests/SprykerCommunityTest/Zed/SearchSignals`) — scaffolded (codeception.yml + Tester),
   no Repository/EntityManager integration tests written yet; those need a real database and are the next
   thing to add here.
