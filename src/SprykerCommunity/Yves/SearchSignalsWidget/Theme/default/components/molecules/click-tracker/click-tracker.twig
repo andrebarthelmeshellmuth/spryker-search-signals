@@ -1,0 +1,12 @@
+{% extends model('component') %}
+
+{# Empty, invisible custom element -- placed as a sibling next to CatalogPageProductWidget's own rendered
+   product card. Its only job is rewriting the card's PDP anchors to the signed click-redirect URL on
+   mount; it deliberately renders no visible markup of its own so a JS failure never affects layout, only
+   click tracking (the anchors keep pointing at the real PDP either way). #}
+{% define config = {
+    name: 'search-signals-click-tracker',
+    tag: 'search-signals-click-tracker',
+} %}
+
+{% block body %}{% endblock %}

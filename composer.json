@@ -1,0 +1,106 @@
+{
+    "name": "spryker-community/search-signals",
+    "type": "library",
+    "description": "Generates search-ranking's business-signal inputs from the shop's own traffic and data instead of requiring the adopter to source them: a GDPR-free SRP impression/click channel (Bayesian-shrunk CTR + query-volume weights for search-ranking-optimizer's term weighting), a project-overridable local-data transformer stack (e.g. stock, delivery time), and documentation for wiring an external batch source (e.g. S3) through Spryker's own Flysystem-backed DataImport.",
+    "license": "MIT",
+    "keywords": [
+        "spryker",
+        "elasticsearch",
+        "opensearch",
+        "search",
+        "ranking",
+        "signals",
+        "analytics"
+    ],
+    "require": {
+        "php": ">=8.3",
+        "spryker/cart-extension": "^4.3.0",
+        "spryker/catalog": "^5.0.0",
+        "spryker/kernel": "^3.30.0",
+        "spryker/locale": "^4.14.0",
+        "spryker/permission-extension": "^1.2.0",
+        "spryker/queue": "^1.29.0",
+        "spryker/queue-extension": "^1.2.0",
+        "spryker/router": "^1.26.0",
+        "spryker/sales-extension": "^1.15.0",
+        "spryker/search-elasticsearch": "^1.10.0",
+        "spryker/storage": "^3.25.0",
+        "spryker/store": "^1.19.0",
+        "spryker/transfer": "^3.25.0",
+        "spryker/twig-extension": "^1.1.0"
+    },
+    "require-dev": {
+        "codeception/codeception": "^5.0.0",
+        "codeception/module-asserts": "^3.0.0",
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0.0",
+        "phpmd/phpmd": "^2.15.0",
+        "phpstan/phpstan": "^2.0.0",
+        "phpunit/phpunit": "^10.0.0 || ^11.0.0",
+        "psr/log": "^3.0.0",
+        "rector/rector": "^2.0",
+        "slevomat/coding-standard": "8.22.1",
+        "spryker/code-sniffer": "0.17.36",
+        "squizlabs/php_codesniffer": "3.13.6"
+    },
+    "suggest": {
+        "spryker-community/search-ranking": "search-signals emits the search_ranking_product_metric.csv contract this package consumes -- see README for the CSV wiring.",
+        "spryker-community/search-ranking-optimizer": "search-signals' query-volume weights are exposed to the optimizer's term weighting via an optional Bridge -- see README. NOT YET BUILT.",
+        "spryker/stock": "Required only if a project registers the shipped StockLevelMetricTransformerPlugin/DeliveryTimeMetricTransformerPlugin (Channel 2) -- see README, 'Channel 2'.",
+        "spryker/flysystem-aws3v3-file-system": "Needed only for Channel 1 (S3 batch import) -- see README, 'Channel 1'.",
+        "spryker/flysystem": "Needed only for Channel 1 (S3 batch import) -- see README, 'Channel 1'."
+    },
+    "scripts": {
+        "check-floors": [
+            "@composer update --prefer-lowest --prefer-stable --no-dev --no-interaction",
+            "php tools/floor-check.php"
+        ],
+        "rector": "rector process",
+        "rector-dry-run": "rector process --dry-run",
+        "phpstan": "phpstan analyse -c phpstan.neon src/",
+        "phpstan-ci": [
+            "php tests/_ci-standalone/generate-transfers.php",
+            "phpstan analyse -c phpstan.ci.neon src/"
+        ],
+        "test-portable": [
+            "php tests/_ci-standalone/generate-transfers.php",
+            "codecept run -c tests/codeception.portable.yml -g Portable"
+        ]
+    },
+    "scripts-descriptions": {
+        "check-floors": "Verifies the declared dependency floors are real: resolves every constraint to its oldest allowed version (production deps only) and asserts each vendor symbol used in src/ actually exists there.",
+        "rector": "Applies Rector's configured rule sets (PHP floor upgrades + level-0 dead-code/code-quality) to src/, tests/, and tools/.",
+        "rector-dry-run": "Shows what Rector would change without writing anything.",
+        "phpstan": "Static analysis at level 8. Must be run from a host shop (see README) -- needs the shop's generated Generated\\Shared\\Transfer\\* classes and a freshly regenerated Ide/AutoCompletion stub, neither of which this package can produce standalone.",
+        "phpstan-ci": "Standalone CI variant of the phpstan check: generates just the Transfer classes this package needs and ignores the two categories of class that only exist inside a real host shop (Propel Orm\\Zed\\* models, the aggregated Ide\\AutoCompletion stub).",
+        "test-portable": "Runs this package's own @group Portable Codeception tests standalone -- no demoshop, no live database, no search engine."
+    },
+    "autoload": {
+        "psr-4": {
+            "SprykerCommunity\\": "src/SprykerCommunity/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SprykerCommunityTest\\": "tests/SprykerCommunityTest/",
+            "Generated\\": "src/Generated/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "minimum-stability": "stable",
+    "homepage": "https://github.com/andrebarthelmeshellmuth/spryker-search-signals",
+    "authors": [
+        {
+            "name": "Andre Barthelmes-Hellmuth",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/andrebarthelmeshellmuth/spryker-search-signals/issues",
+        "source": "https://github.com/andrebarthelmeshellmuth/spryker-search-signals"
+    }
+}

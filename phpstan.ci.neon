@@ -1,0 +1,51 @@
+includes:
+    - phpstan.neon
+
+# CI-only variant of phpstan.neon, run via `composer phpstan-ci` (see tests/_ci-standalone for the same
+# standalone-portability pattern already used by the Portable Codeception suite). Two categories of class
+# genuinely don't exist outside a real host shop and are excluded rather than faked:
+#
+# - `Generated\{Zed,Yves,Client,Service}\Ide\AutoCompletion` — an aggregate stub across every module in a
+#   real project's full dependency graph, produced by `console dev:ide-auto-completion:generate`. Not
+#   reproducible for one package in isolation.
+# - `Orm\Zed\SearchSignals\Persistence\*` (Propel entity/query classes) — produced by
+#   `propel:model:build` against a real schema + database, same category of gap.
+#
+# Both are still exercised for real by this package's DB-backed Codeception suite when run from a host
+# shop (see README, "Testing and CI") — this file only relaxes what a single standalone package checkout
+# can verify about itself.
+#
+# Two further categories are ignored below, standalone-only (unlike PageIndexMap/Locator/Propel-Collection
+# above, which apply in host-shop mode too and therefore live in the shared phpstan.neon instead):
+#
+# - `CartChangeTransfer::getItems()/getQuote()` and `SaveOrderTransfer::getOrderItems()` — these
+#   properties are added to the base (empty) transfer by OTHER Spryker modules' own transfer.xml
+#   (`spryker/product-cart-connector` for CartChange, similarly for SaveOrder's order-items relation),
+#   modules search-signals doesn't itself require (rightly — it shouldn't hard-depend on a specific
+#   cart/sales feature set just to type-check standalone). Every real Spryker shop with a working cart
+#   and checkout already has one of these installed, so the properties genuinely exist at runtime; only
+#   this standalone, minimal-dependency checkout can't regenerate them.
+parameters:
+    # Several ignoreErrors patterns inherited from phpstan.neon (PageIndexMap, Locator::store/stock,
+    # Propel Collection::toArray()) are host-shop-only conditions that never fire here at all -- e.g.
+    # the Propel one only exists on code paths `excludePaths`/`Orm\Zed\` below already excludes from
+    # analysis entirely in this CI-standalone variant. PHPStan's default strict "every ignore pattern
+    # must match something" check would otherwise fail this config on exactly that mismatch -- doesn't
+    # apply to phpstan.neon itself (host-shop mode), only to this deliberately-relaxed CI variant.
+    reportUnmatchedIgnoredErrors: false
+    bootstrapFiles!:
+        - phpstan-ci-bootstrap.php
+    excludePaths:
+        analyse:
+            - src/Generated/*
+    scanDirectories:
+        - src/Generated
+    ignoreErrors:
+        -
+            message: '#Generated\\(Zed|Yves|Client|Service)\\Ide\\AutoCompletion#'
+        -
+            message: '#Orm\\Zed\\#'
+        -
+            message: '#Call to an undefined method Generated\\Shared\\Transfer\\CartChangeTransfer::(getItems|getQuote)\(\)#'
+        -
+            message: '#Call to an undefined method Generated\\Shared\\Transfer\\SaveOrderTransfer::getOrderItems\(\)#'
