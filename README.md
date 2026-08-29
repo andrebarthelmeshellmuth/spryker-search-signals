@@ -451,3 +451,5 @@ composer test-portable
 ## License
 
 MIT, see [LICENSE](LICENSE).
+
+<!-- dummy change for a review-only PR; not intended to be merged -->
