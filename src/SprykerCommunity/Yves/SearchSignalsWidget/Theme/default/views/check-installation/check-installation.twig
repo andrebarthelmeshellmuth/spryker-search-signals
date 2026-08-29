@@ -1,0 +1,33 @@
+{# @var data.checks array<array{label: string, passed: bool, remedy: string|null}> #}
+
+{% extends template('page-blank') %}
+
+{% define data = {
+    checks: _view.checks,
+    title: 'search-signals: installation check',
+} %}
+
+{% block body %}
+    <div class="container check-installation-page">
+        <h1>search-signals: installation check</h1>
+        <p class="text-small">Yves-side checks only. Run <code>console search-signals:check-installation</code> for the Zed-side checks (Storage-KV reachability, schema, click-token secret).</p>
+
+        <ul class="check-installation-page__list">
+            {% for check in data.checks %}
+                <li class="check-installation-check {{ check.passed ? 'check-installation-check--passed' : 'check-installation-check--failed' }}">
+                    <span class="check-installation-check__icon">{{ check.passed ? '✓' : '✗' }}</span>
+                    <span class="check-installation-check__label">{{ check.label }}</span>
+                    {% if not check.passed %}
+                        <p class="check-installation-check__remedy">{{ check.remedy }}</p>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+
+        <p class="check-installation-page__not-verifiable-heading">Not verifiable from this page:</p>
+        <ul class="check-installation-page__not-verifiable-list">
+            <li>whether the frontend bundle (the <code>click-tracker</code> molecule) was actually rebuilt (<code>yarn yves</code>)</li>
+            <li>whether the SRP template actually calls <code>searchSignalsClickUrl()</code> per product (only that the function itself is callable)</li>
+        </ul>
+    </div>
+{% endblock %}

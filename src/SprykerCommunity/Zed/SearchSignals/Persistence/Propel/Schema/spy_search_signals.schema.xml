@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<database xmlns="spryker:schema-01"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="spryker:schema-01 https://static.spryker.com/schema-01.xsd"
+        name="zed"
+        namespace="Orm\Zed\SearchSignals\Persistence"
+        package="src.Orm.Zed.SearchSignals.Persistence">
+
+    <!--
+        Raw, append-only capture tables (channel 3a, P1). Deliberately carry NO visitor identity: no
+        session id, no customer id, no IP. See ClickTokenCodec. Short retention, purged independently of
+        the rollup tables below (which are the durable, decaying-at-read-time history).
+    -->
+    <table name="spy_search_signals_impression_event" idMethod="native">
+        <column name="id_search_signals_impression_event" type="BIGINT" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="query" type="VARCHAR" size="255" required="true"/>
+        <column name="abstract_sku" type="VARCHAR" size="255" required="true"/>
+        <column name="rank" type="INTEGER" required="true"/>
+        <column name="store_name" type="VARCHAR" size="32" required="true"/>
+        <column name="locale_name" type="VARCHAR" size="32" required="true"/>
+        <column name="captured_at" type="TIMESTAMP" required="true"/>
+        <index name="idx_search_signals_impression_event-query-store-locale">
+            <index-column name="query"/>
+            <index-column name="store_name"/>
+            <index-column name="locale_name"/>
+        </index>
+        <index name="idx_search_signals_impression_event-abstract_sku">
+            <index-column name="abstract_sku"/>
+        </index>
+        <index name="idx_search_signals_impression_event-captured_at">
+            <index-column name="captured_at"/>
+        </index>
+    </table>
+
+    <table name="spy_search_signals_click_event" idMethod="native">
+        <column name="id_search_signals_click_event" type="BIGINT" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="query" type="VARCHAR" size="255" required="true"/>
+        <column name="abstract_sku" type="VARCHAR" size="255" required="true"/>
+        <column name="rank" type="INTEGER" required="true"/>
+        <column name="store_name" type="VARCHAR" size="32" required="true"/>
+        <column name="locale_name" type="VARCHAR" size="32" required="true"/>
+        <column name="captured_at" type="TIMESTAMP" required="true"/>
+        <index name="idx_search_signals_click_event-query-store-locale">
+            <index-column name="query"/>
+            <index-column name="store_name"/>
+            <index-column name="locale_name"/>
+        </index>
+        <index name="idx_search_signals_click_event-abstract_sku">
+            <index-column name="abstract_sku"/>
+        </index>
+        <index name="idx_search_signals_click_event-captured_at">
+            <index-column name="captured_at"/>
+        </index>
+    </table>
+
+    <!--
+        Rollup tables (P3): append-only time buckets, counts only (never rates, see the search-signals
+        plan's "store counts, never rates" decision), decay/shrinkage happens at READ time (P4), never here.
+        Product-scoped daily / query-scoped weekly per the plan's volume-arithmetic reasoning.
+    -->
+    <table name="spy_search_signals_product_ctr_daily" idMethod="native">
+        <column name="id_search_signals_product_ctr_daily" type="BIGINT" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="abstract_sku" type="VARCHAR" size="255" required="true"/>
+        <column name="store_name" type="VARCHAR" size="32" required="true"/>
+        <column name="locale_name" type="VARCHAR" size="32" required="true"/>
+        <column name="bucket_date" type="DATE" required="true"/>
+        <column name="impression_count" type="INTEGER" required="true" defaultValue="0"/>
+        <column name="click_count" type="INTEGER" required="true" defaultValue="0"/>
+        <!--
+            Cart-add/order counts (channel 3b's "small version", decided 2026-08-23): deliberately
+            unattributed to any search term, same shape as search-ranking's existing top_seller metric,
+            not a lesser version of a query-attributed signal. No raw per-event table feeds these: capture
+            increments this bucket directly, since there is no per-event context worth keeping around
+            individually (unlike impressions/clicks, which carry query+rank).
+        -->
+        <column name="cart_add_count" type="INTEGER" required="true" defaultValue="0"/>
+        <column name="order_count" type="INTEGER" required="true" defaultValue="0"/>
+        <unique name="unique_search_signals_product_ctr_daily">
+            <unique-column name="abstract_sku"/>
+            <unique-column name="store_name"/>
+            <unique-column name="locale_name"/>
+            <unique-column name="bucket_date"/>
+        </unique>
+    </table>
+
+    <table name="spy_search_signals_query_ctr_weekly" idMethod="native">
+        <column name="id_search_signals_query_ctr_weekly" type="BIGINT" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="query" type="VARCHAR" size="255" required="true"/>
+        <column name="abstract_sku" type="VARCHAR" size="255" required="true"/>
+        <column name="store_name" type="VARCHAR" size="32" required="true"/>
+        <column name="locale_name" type="VARCHAR" size="32" required="true"/>
+        <column name="bucket_week" type="DATE" required="true" description="Monday of the ISO week this bucket covers."/>
+        <column name="impression_count" type="INTEGER" required="true" defaultValue="0"/>
+        <column name="click_count" type="INTEGER" required="true" defaultValue="0"/>
+        <unique name="unique_search_signals_query_ctr_weekly">
+            <unique-column name="query"/>
+            <unique-column name="abstract_sku"/>
+            <unique-column name="store_name"/>
+            <unique-column name="locale_name"/>
+            <unique-column name="bucket_week"/>
+        </unique>
+        <index name="idx_search_signals_query_ctr_weekly-query-store-locale">
+            <index-column name="query"/>
+            <index-column name="store_name"/>
+            <index-column name="locale_name"/>
+        </index>
+    </table>
+</database>

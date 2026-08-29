@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <search-signals-gui>
+        <label>Search Signals</label>
+        <title>Search Signals</title>
+        <icon>tune</icon>
+        <bundle>search-signals</bundle>
+        <controller>index</controller>
+        <action>index</action>
+        <pages>
+            <search-signals-overview>
+                <label>Overview</label>
+                <title>Overview</title>
+                <bundle>search-signals</bundle>
+                <controller>index</controller>
+                <action>index</action>
+            </search-signals-overview>
+        </pages>
+    </search-signals-gui>
+</config>

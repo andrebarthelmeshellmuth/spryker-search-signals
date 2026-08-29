@@ -1,0 +1,36 @@
+parameters:
+    level: 8
+
+    # Resolves relative to a host shop's vendor/spryker-community/search-signals/ install path —
+    # this package's own DependencyProviders use the shop's generated Locator and
+    # Generated\Shared\Transfer\* classes, which don't exist outside a host shop (see README, "Testing
+    # and CI").
+    bootstrapFiles:
+        - '%rootDir%/../../../phpstan-bootstrap.php'
+
+    # Four narrow ignores, all confirmed real host-shop-only gaps by actually running `composer
+    # phpstan` against a real fresh spryker-shop/b2b-demo-marketplace checkout (2026-08-24, this
+    # package's first CI run) -- not guessed, and not the same as the phpstan.ci.neon exclusions
+    # (those cover classes that don't exist AT ALL standalone; these four exist in a real host shop
+    # too, phpstan just can't see them there either):
+    #
+    # - `Generated\Shared\Search\PageIndexMap` -- generated from a project's own `.search.xml`
+    #   schema (product-page-search config), not from this package's or even a bare shop skeleton's
+    #   own dependency graph; a project without that schema customized never generates it.
+    # - `Spryker\Zed\Kernel\Locator::store()/stock()` -- these dynamic accessors only exist via
+    #   `@method` docblocks Spryker generates onto a PROJECT's own Locator subclass at
+    #   `dev:ide-auto-completion:generate` time, never onto the base `Locator` class these two
+    #   Channel 2 plugins call directly (see their own docblocks for why they can't get a
+    #   constructor-injected Bridge instead).
+    # - `Propel\Runtime\Collection\Collection::toArray()` -- a real, well-known Propel/phpstan stub
+    #   gap: `SpySearchSignals*Query::create()->find()` really returns a generated `ObjectCollection`
+    #   subclass that DOES have `toArray()` at runtime (exercised live, see this package's own build
+    #   notes), but phpstan-spryker's stubs only type `find()` against the generic base `Collection`,
+    #   which doesn't declare it.
+    ignoreErrors:
+        -
+            message: '#Generated\\Shared\\Search\\PageIndexMap#'
+        -
+            message: '#Call to an undefined method Spryker\\Zed\\Kernel\\Locator::(store|stock)\(\)#'
+        -
+            message: '#Call to an undefined method Propel\\Runtime\\Collection\\Collection::toArray\(\)#'
